@@ -1,0 +1,8 @@
+"0","# add forecasts to plotting dataframe"
+"0","data_plot = data_xts"
+"0",""
+"0","fadmits = xts(admissions_forecasts,finds)"
+"0","data_plot$upr = fadmits #xts(forecasts_sea[,2],finds)"
+"0","data_plot$sea = xts(forecasts_sea[,1],finds)"
+"0","#data_plot$lwr = xts(forecasts_sea[,3],finds)#"
+"0","#data_plot$forc = xts(admissions_forecasts[,1],finds)#"

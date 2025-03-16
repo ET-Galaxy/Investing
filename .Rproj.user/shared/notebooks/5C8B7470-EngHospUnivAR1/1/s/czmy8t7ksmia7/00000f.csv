@@ -1,0 +1,7 @@
+"0","# Compute LDL and lag data appropriately"
+"0",""
+"0","### must specify the lag order###"
+"0",""
+"0","data_xts$LDLhosp = log(as.vector(data_xts$newAdmit)/lag(as.vector(data_xts$cAdmit)))"
+"0",""
+"0","data_ldl <- as.vector(data_xts$LDLhosp) %>% na.omit"

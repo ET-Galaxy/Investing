@@ -1,0 +1,114 @@
+"0","knitr::opts_chunk$set(warning=F,message=F,echo=F)"
+"0","library(tis)"
+"2","
+Attaching package: ‘tis’
+
+"
+"2","The following objects are masked from ‘package:lubridate’:
+
+    day, hms, month, period, POSIXct, quarter, today, year, ymd
+
+"
+"2","The following object is masked from ‘package:dplyr’:
+
+    between
+
+"
+"0","library(KFAS)"
+"2","Please cite KFAS in publications by using: 
+
+  Jouni Helske (2017). KFAS: Exponential Family State Space Models in R. Journal of Statistical Software, 78(10), 1-39. doi:10.18637/jss.v078.i10.
+"
+"0","library(tidyverse)"
+"0","library(timetk)"
+"2","Registered S3 method overwritten by 'data.table':
+  method           from
+  print.data.table     
+"
+"0","library(readxl)"
+"0","library(pracma)"
+"2","
+Attaching package: ‘pracma’
+
+"
+"2","The following object is masked from ‘package:tis’:
+
+    blanks
+
+"
+"2","The following object is masked from ‘package:purrr’:
+
+    cross
+
+"
+"0","library(tsbox)"
+"0","library(xts)"
+"2","Loading required package: zoo
+"
+"2","
+Attaching package: ‘zoo’
+
+"
+"2","The following objects are masked from ‘package:base’:
+
+    as.Date, as.Date.numeric
+
+"
+"2","
+######################### Warning from 'xts' package ##########################
+#                                                                             #
+# The dplyr lag() function breaks how base R's lag() function is supposed to  #
+# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
+# source() into this session won't work correctly.                            #
+#                                                                             #
+# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
+# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
+# dplyr from breaking base R's lag() function.                                #
+#                                                                             #
+# Code in packages is not affected. It's protected by R's namespace mechanism #
+# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
+#                                                                             #
+###############################################################################
+"
+"2","
+Attaching package: ‘xts’
+
+"
+"2","The following objects are masked from ‘package:dplyr’:
+
+    first, last
+
+"
+"0","library(httr)"
+"0","library(zoo)"
+"0",""
+"0","# Standard update function - edited to allow the targeting of the signal-to-noise ratio"
+"0","# Signal-to-noise ratio is defined as the variance of the trend component of order 'order' "
+"0","# (= 1 for level, = 2 for slope, etc) relative to variance of irregular of series 'index'"
+"0","# (= 1 for 1st col of dataframe, = 2 for 2nd etc)"
+"0","updatear1=function(pars, model){"
+"0","  np = sum(is.na(model$Q)) + sum(is.na(model$H))"
+"0","  if(any(is.na(model$Q))){"
+"0","    Q <- as.matrix(model$Q[,,1])"
+"0","    naQd  <- which(is.na(diag(Q)))"
+"0","    naQnd <- which(upper.tri(Q[naQd,naQd]) & is.na(Q[naQd,naQd]))"
+"0","    Q[naQd,naQd][lower.tri(Q[naQd,naQd])] <- 0"
+"0","    diag(Q)[naQd] <- exp(0.5 * pars[1:length(naQd)])"
+"0","    Q[naQd,naQd][naQnd] <- pars[length(naQd)+1:length(naQnd)]"
+"0","    model$Q[naQd,naQd,1] <- crossprod(Q[naQd,naQd])"
+"0","  }"
+"0","  if(!identical(model$H,'Omitted') && any(is.na(model$H))){"
+"0","    H<-as.matrix(model$H[,,1])"
+"0","    naHd  <- which(is.na(diag(H)))"
+"0","    naHnd <- which(upper.tri(H[naHd,naHd]) & is.na(H[naHd,naHd]))"
+"0","    H[naHd,naHd][lower.tri(H[naHd,naHd])] <- 0"
+"0","    diag(H)[naHd] <-"
+"0","      exp(0.5 * pars[length(naQd)+length(naQnd)+1:length(naHd)])"
+"0","    H[naHd,naHd][naHnd] <-"
+"0","      pars[length(naQd)+length(naQnd)+length(naHd)+1:length(naHnd)]"
+"0","    model$H[naHd,naHd,1] <- crossprod(H[naHd,naHd])"
+"0","  }"
+"0","  T = model$T[,,1]"
+"0","  model$T[nrow(T),ncol(T),1] = pars[np+1]"
+"0","  model"
+"0","}"

@@ -1,0 +1,5 @@
+"0","# Create smoothed admissions"
+"0","lcadmit = lag(as.vector(data_xts$cAdmit)) %>% na.omit()"
+"0","smldlh = predict(out$model,states=c('trend','custom')) %>% exp %>% as.vector"
+"0","smadmit = smldlh*lcadmit[1:length(lcadmit)]"
+"0","data_plot$smAdmit = smadmit %>% xts(index(data_xts[(2):(length(lcadmit)+1),]))"
