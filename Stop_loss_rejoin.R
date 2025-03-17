@@ -4,27 +4,18 @@ initial_wealth=1
 horizon=301
 
 # Define stock tickers
-stocks <- c(
-  AAPL = 0.06, NVDA = 0.06, AVGO = 0.04, TSM = 0.04,
-  GOOG = 0.06, META = 0.06, KO = 0.04, LIN = 0.08,
-  LLY = 0.06, JPM = 0.08, BRKB = 0.08, UBER = 0.04,
-  AXP = 0.06, SONY = 0.04, PANW = 0.04, NFLX = 0.04, 
-  GE = 0.04, SPOT = 0.04, ORCL = 0.04
-)
+stocks <- c(NVDA = 1, CASH =0)
 
 set.seed=1
-palet <- sample(colors(), 19)
+palet <- sample(colors(), 1)
 wealth_dist<- data.frame(Start= as.vector(stocks), row.names = names(stocks))
-
-props=matrix(nrow=19, ncol=horizon)
-props[,1]=as.vector(stocks)
 
 portfolio<-numeric(horizon)
 portfolio[1]<-1
 
 # Read all CSV files and store them in a named list
-data_list <- lapply(names(stocks), function(ticker) {
-  df <- read.csv(paste0(ticker, ".csv"))[,-7]  # Remove 7th column
+data_list <- lapply(names(stocks)[-2], function(ticker) {
+  df <- read.csv(paste0("dataset/",ticker, ".csv"))[,-7]  # Remove 7th column
   df$Date <- as.Date(df$Date, format="%d/%m/%Y")  # Convert Date column
   df<-arrange(df, Date)
   df$Price <- gsub(",", "", df$Price)  # Remove commas
@@ -36,39 +27,37 @@ data_list <- lapply(names(stocks), function(ticker) {
 })
 
 # Assign names to the list for easier reference
-names(data_list) <- names(stocks)
+names(data_list) <- names(stocks)[-2]
 
 #Percentage Change to the next day closing price
 change_df<-data_list[[1]]$Date[-301]
-for (i in 1:length(stocks)){
+for (i in 1:(length(stocks)-1)){
   change_df<-cbind(change_df,data_list[[i]]$Change[-301])
 }
 
 rebalance_days<-c()
+drawdown<-wealth_max<-numeric(301)
+wealth_max[1]<-wealth_dist[,1]
 for (i in 2:horizon){
-  wealth_dist[,i]<-wealth_dist[,i-1]*(1+change_df[i-1,-1])
+  wealth_dist[1,i]<-wealth_dist[1,i-1]*(1+change_df[i-1,-1])
+  wealth_dist[2,i]<-wealth_dist[2,i-1]  #Cash
   portfolio[i]=sum(wealth_dist[,i])
-  props[,i]<-wealth_dist[,i]/portfolio[i]
-  if (any(abs(props[,i]-props[,1])>50*props[,1])){
-    wealth_dist[,i]<-portfolio[i]*props[,1]
+  wealth_max[i]<-max(wealth_max[i-1],wealth_dist[1,i])
+  drawdown[i]<-wealth_dist[1,i]/wealth_max[i]
+  if (drawdown[i]<0.95 & wealth_dist[1,i]!=0){
+    wealth_dist[2,i]<-wealth_dist[1,i]
+    wealth_dist[1,i]<-0
     rebalance_days<-c(rebalance_days,i)
-  } 
+  } else if (wealth_dist[1,i]==0 & data_list[[1]]$Price[i]>=wealth_dist[2,i]){
+    wealth_dist[1,i]<-wealth_dist[2,i]
+    wealth_dist[2,i]<-0
+  }
 }
-
-#Max drawdown
-portfolio_max<-numeric(301)
-portfolio_max[1]<-portfolio[1]
-for (i in 1:301){
-  portfolio_max[i]<-max(portfolio_max,portfolio[i])
-}
-drawdown<-portfolio/portfolio_max
-plot(as.xts(drawdown,data_list[[1]]$Date))
 
 names(portfolio)<-names(wealth_dist)<-data_list[[1]]$Date
 rebalance_days<-data_list[[1]]$Date[rebalance_days]
 
-
-plot(as.xts(portfolio), type = "l", col = "turquoise", lwd = 2,  
+plot(portfolio, type = "l", col = "turquoise", lwd = 2,  
      xlab = "Time", ylab = "Price", main = "Portfolio")
 
 

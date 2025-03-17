@@ -24,7 +24,7 @@ portfolio[1]<-1
 
 # Read all CSV files and store them in a named list
 data_list <- lapply(names(stocks), function(ticker) {
-  df <- read.csv(paste0(ticker, ".csv"))[,-7]  # Remove 7th column
+  df <- read.csv(paste0("dataset/",ticker, ".csv"))[,-7]  # Remove 7th column
   df$Date <- as.Date(df$Date, format="%d/%m/%Y")  # Convert Date column
   df<-arrange(df, Date)
   df$Price <- gsub(",", "", df$Price)  # Remove commas
@@ -49,7 +49,7 @@ for (i in 2:horizon){
   wealth_dist[,i]<-wealth_dist[,i-1]*(1+change_df[i-1,-1])
   portfolio[i]=sum(wealth_dist[,i])
   props[,i]<-wealth_dist[,i]/portfolio[i]
-  if (any(abs(props[,i]-props[,1])>50*props[,1])){
+  if (any(abs(props[,i]-props[,1])>0.2*props[,1])){
     wealth_dist[,i]<-portfolio[i]*props[,1]
     rebalance_days<-c(rebalance_days,i)
   } 
@@ -66,7 +66,6 @@ plot(as.xts(drawdown,data_list[[1]]$Date))
 
 names(portfolio)<-names(wealth_dist)<-data_list[[1]]$Date
 rebalance_days<-data_list[[1]]$Date[rebalance_days]
-
 
 plot(as.xts(portfolio), type = "l", col = "turquoise", lwd = 2,  
      xlab = "Time", ylab = "Price", main = "Portfolio")
